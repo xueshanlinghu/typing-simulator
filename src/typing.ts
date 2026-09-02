@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { EOL, State } from "./State";
+import { EOL, State } from "./state";
 
 interface TypingProps {
   text: string;
