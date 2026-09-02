@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { EOL, State, Status } from "./State";
+import { EOL, State } from "./State";
 
 interface TypingProps {
   text: string;
@@ -8,9 +8,10 @@ interface TypingProps {
 }
 
 async function typing(props: TypingProps): Promise<void> {
-  if (!props.text || props.text.length == 0 || props.state.status != "typing") return;
-  var text = props.text;
-  var pos = props.pos ?? new vscode.Position(0, 0);
+  if (!props.text || props.state.status != "typing") return;
+
+  let text = props.text;
+  let pos = props.pos ?? new vscode.Position(0, 0);
   const eol = props.state.eol;
 
   const editor = vscode.window.activeTextEditor;
@@ -20,67 +21,40 @@ async function typing(props: TypingProps): Promise<void> {
   }
 
   const textAction = applyActions(text, pos, props.state);
-
   if (!textAction) return;
-
   text = textAction;
 
-  var char = text.substring(0, 1);
-  var charLength = 1;
+  let charLength = 1;
+  let newPos: vscode.Position;
 
-  await writeText(char, pos);
-
-  if ((eol == "lf" && char == "\n") || (eol == "crlf" && text.substring(0, 2) == "\r\n")) {
-    if (eol == "crlf") charLength = 2;
-    pos = new vscode.Position(pos.line + 1, 0);
-    char = "";
+  if (text.startsWith("\r\n")) {
+    await writeText(eol === "crlf" ? "\r\n" : "\n", pos);
+    charLength = 2;
+    newPos = new vscode.Position(pos.line + 1, 0);
+  } else if (text.startsWith("\n")) {
+    await writeText("\n", pos);
+    newPos = new vscode.Position(pos.line + 1, 0);
+  } else {
+    await writeText(text.substring(0, 1), pos);
+    newPos = new vscode.Position(pos.line, pos.character + 1);
   }
 
-  const nextText = text.substring(charLength, text.length);
+  const nextText = text.substring(charLength);
   props.state.setTypingText(nextText);
-  const selPos = new vscode.Position(pos.line, pos.character + 1);
-  vscode.window.activeTextEditor!.selection = new vscode.Selection(selPos, selPos);
-  const newPos = new vscode.Position(pos.line, char.length + pos.character);
   props.state.setPosition(newPos);
+  vscode.window.activeTextEditor!.selection = new vscode.Selection(newPos, newPos);
   nextBuffer(nextText, newPos, props.state);
 }
 
 async function writeText(text: string, pos: vscode.Position) {
-  return new Promise<void>((resolve, reject) => {
-    try {
-      const editor = vscode.window.activeTextEditor;
-      if (!editor) throw new Error("No active editor");
-      editor
-        .edit(function (editBuilder) {
-          editBuilder.insert(pos, text);
-        })
-        .then(
-          () => {
-            resolve();
-          },
-          () => {
-            throw new Error("Error on write text");
-          },
-        );
-    } catch (e) {
-      reject();
-    }
-  });
+  const editor = vscode.window.activeTextEditor;
+  if (!editor) return;
+  await editor.edit((editBuilder) => editBuilder.insert(pos, text));
 }
 
 function delayTyping(text: string, pos: vscode.Position, state: State) {
-  const sppedMultiplier = state.speed == "slow" ? 200 : state.speed == "medium" ? 100 : 50;
-  let delay = sppedMultiplier * Math.random();
-  if (Math.random() < 0.1)
-    delay += state.speed == "slow" ? 300 : state.speed == "medium" ? 250 : 130;
-
-  setTimeout(function () {
-    typing({
-      text: text,
-      pos: pos,
-      state,
-    });
-  }, delay);
+  const speed = state.speed == "slow" ? 200 : state.speed == "medium" ? 100 : 50;
+  setTimeout(() => typing({ text, pos, state }), speed * Math.random());
 }
 
 function nextBuffer(text: string, pos: vscode.Position, state: State) {
@@ -91,32 +65,24 @@ function nextBuffer(text: string, pos: vscode.Position, state: State) {
 
 function applyActions(text: string, pos: vscode.Position, state: State): string | null {
   const eolChar = state.eol == "lf" ? "\n" : "\r\n";
-  const eolLength = eolChar.length;
-  const endOfLinePos = text.indexOf(eolChar);
   const currentLine = text.split(eolChar)[0];
+  const endOfLinePos = text.indexOf(eolChar);
 
   if (currentLine.trim().match(/(\/\/|#)\[ignore\]/)) {
-    text = text.substring(currentLine.length + eolLength, text.length);
-    const newPos = new vscode.Position(pos.line, 0);
-    nextBuffer(text, newPos, state);
+    const next = text.substring(currentLine.length + eolChar.length);
+    nextBuffer(next, new vscode.Position(pos.line, 0), state);
     return null;
   }
 
   if (currentLine.trim().match(/(\/\/|#)\[quick\]/)) {
-    const quickText = currentLine.replace(/(\/\/|#)\[quick\]/, "");
-    writeText(quickText, new vscode.Position(pos.line, 0));
-    text = text.substring(endOfLinePos, text.length);
-    const newPos = new vscode.Position(pos.line + 1, 0);
-    nextBuffer(text, newPos, state);
+    writeText(currentLine.replace(/(\/\/|#)\[quick\]/, ""), new vscode.Position(pos.line, 0));
+    nextBuffer(text.substring(endOfLinePos), new vscode.Position(pos.line + 1, 0), state);
     return null;
   }
 
-  const alone = Boolean(currentLine.trim().match(/^\s*(\/\/|#)\[pause\]\s*/) && pos.character == 0);
-  if (currentLine.trim().match(/^(\/\/|#)\[pause\]/) || alone) {
+  if (currentLine.trim().match(/^(\/\/|#)\[pause\]/)) {
     state.setStatus("paused");
-    text = text.substring(alone ? currentLine.length + eolLength : endOfLinePos, text.length);
-    state.setTypingText(text);
-    state.setPosition(pos);
+    state.setTypingText(text.substring(endOfLinePos));
     return null;
   }
 
