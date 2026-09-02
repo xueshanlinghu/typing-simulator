@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { Mode, Speed, State } from "./State";
+import { Mode, Speed, State } from "./state";
 import { typing } from "./typing";
 import Queue from "promise-queue";
 
