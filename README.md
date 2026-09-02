@@ -1,96 +1,90 @@
-# Typing Simulator for VSCode
+# Typing Simulator for VS Code and Cursor
 
-The **Typing Simulator** plugin is tailored for live presentations or video tutorials, offering a seamless way to simulate the typing of pre-written code. This feature proves invaluable by eliminating the risk of typos during presentations, allowing you to focus on your speech and presentation rather than worrying about the code input.
+Typing Simulator simulates typing pre-written code for live presentations, classes, and video tutorials. It can type from the current file or clipboard in either automatic or manual mode.
 
-You can also use this extension to impress your boss or your friends 😄. Activate `Manual` mode, and simply start typing any key to see your code materialize effortlessly.
+This fork is maintained for Cursor/VS Code presentation use and includes fixes for clipboard line endings and CRLF typing.
 
-Did you like the extension? Please give me a star ⭐ on this project on github and contribute to the project.
+Original project: https://github.com/marcosgomesneto/typing-simulator
 
-👉 [Project Repository](https://github.com/marcosgomesneto/typing-simulator)
+## Install in Cursor
+
+Download the latest `.vsix` file from this repository's GitHub Releases page.
+
+In Cursor:
+
+1. Press `Ctrl+Shift+P`.
+2. Run `Extensions: Install from VSIX...`.
+3. Select the downloaded `.vsix` file.
+4. Reload Cursor if prompted.
+
+If the original Marketplace version is already installed, uninstall or disable it first to avoid duplicate command registrations.
 
 ## Usage
 
-1. Install the `Typing Simulator` extension in VSCode.
-2. Open a code file or copy the code to the clipboard.
-3. Optionally, define the actions for each line (See the table below).
-4. Press `CTRL` + `SHIFT` + `P`, search for the `Start Typing: ...` command.
-5. Set up custom shortcuts for a seamless presentation experience.
-6. Enjoy an engaging and hassle-free coding presentation or tutorial!
+1. Open a code file or copy the code you want to simulate to the clipboard.
+2. Open Settings and search for `Typing Simulator`.
+3. Choose `Manual` mode if you want to control the pace yourself.
+4. Run `Typing Simulator: Start Typing From Clipboard` or `Typing Simulator: Start Typing From Current File`.
+5. In Manual mode, press or hold ordinary typing keys to reveal the prepared code. The actual key you press is ignored; the next character from the prepared code is inserted instead.
+6. Configure keyboard shortcuts for the Typing Simulator commands if desired.
 
-## Configure
+For teaching or recording, a useful setup is to bind `Typing Simulator: Start Typing From Clipboard` to a shortcut, then hold a normal key such as `J` while you want code to appear and release it when you want to pause your delivery.
 
-Press `CTRL` + `SHIFT` + `P`, search for the `User Settings` and Search `Typing Simulator`.
+## Configuration
 
-![screenshot](https://raw.githubusercontent.com/marcosgomesneto/typing-simulator/main/resources/configuration.png)
+Press `Ctrl+Shift+P`, open User Settings, and search for `Typing Simulator`.
 
-## Key Features
+![configuration](https://raw.githubusercontent.com/xueshanlinghu/typing-simulator/main/resources/configuration.png)
 
-- **Code Source Flexibility:** Whether your code is in an open file in VSCode or copied to the clipboard, Typing Simulator has you covered.
+Available settings:
 
-- **Two Simulation Modes:**
+- `typingSimulator.mode`: `auto` or `manual`
+- `typingSimulator.speed`: `slow`, `medium`, or `fast` (used by automatic mode)
 
-  - _Automatic:_ Let the plugin simulate human-like typing automatically.
-  - _Manual:_ Control the simulation by manually typing any keys randomly, offering flexibility and a more interactive experience during presentations.
-
-- **Customizable Simulation Behavior:**
-
-  - Set line-specific behaviors, such as ignoring a line or defining breakpoints.
-  - Adjust the typing speed for automatic mode, tailoring it to your presentation style.
-
-- **Convenient Shortcuts (Tip):** To enhance your control over the simulation during live presentations or video recording, configure custom shortcuts in VSCode. Access VSCode's Keyboard Shortcuts settings (`File > Preferences > Keyboard Shortcuts`), search for Typing Simulator commands, and assign your preferred shortcuts.
-
-## Available Commands:
+## Available Commands
 
 - **Typing Simulator: Start Typing From Current File**
 - **Typing Simulator: Start Typing From Clipboard**
-- **Typing Simulator: Pause Typing**
 - **Typing Simulator: Continue Typing**
 - **Typing Simulator: Stop Typing**
 
-Feel free to explore the documentation for in-depth information on features and customization options.
+## Actions per line
 
-## Set actions per line
+Add one of these comments to a line:
 
-Comment at the end of each line with:
+| End-line comment | Action |
+| --- | --- |
+| `//[pause]` or `#[pause]` | Pause typing |
+| `//[ignore]` or `#[ignore]` | Ignore the line |
+| `//[quick]` or `#[quick]` | Insert the line content immediately |
 
-| End-Line Comment            | Action                         |
-| --------------------------- | ------------------------------ |
-| `//[pause]` or `#[pause]`   | Pause typing                   |
-| `//[ignore]` or `#[ignore]` | Ignore line                    |
-| `//[quick]` or `#[quick]`   | Instantly inserts line content |
+## Fork fixes
 
-## Why Typing Simulator?
+### 0.1.3
 
-This extension aims to combine the strengths of plugins with similar goals, such as HackerTyper, CoderTyper, and Live Auto-Type. By offering a feature-rich and customizable typing simulation experience, Typing Simulator ensures a smooth and error-free presentation of code, enhancing the overall quality of your live demos and video tutorials.
+- Normalize clipboard line endings to the active editor's EOL format.
+- Correctly type both LF and CRLF newlines.
+- Add Cursor-focused package metadata and installation guidance.
+- Add GitHub Actions CI/CD to build `.vsix` packages and publish GitHub Releases automatically.
 
-## Support and Contribution
+## Build locally
 
-If you encounter any issues or have suggestions for improvements, feel free to open an [issue](https://github.com/marcosgomesneto/typing-simulator/issues) on the GitHub repository.
+The project can still be built locally when needed:
 
-If you want to contribute, please open a [pull request](https://github.com/marcosgomesneto/typing-simulator/pulls) in the repository.
+```bash
+npm install
+npm run compile
+npx @vscode/vsce package
+```
 
-**Happy Coding!**
+Yarn can also be used for installing dependencies and running the existing package scripts.
 
-## Release Notes
+## Automated releases
 
-### 0.1.2
+Pushing to `main` runs the GitHub Actions build. The workflow reads the version from `package.json`, builds and lints the extension, packages a `.vsix`, and creates the corresponding `v<version>` GitHub Release if that release does not already exist.
 
-Change icon
+A manually pushed version tag such as `v0.1.3` is also supported. If a tag version does not match `package.json`, the release workflow fails intentionally.
 
-### 0.1.1
+## License and credits
 
-Fix error 'Command not found' when start typing
-
----
-
-### 0.0.2
-
-Add support for comment character `#`
-
----
-
-### 0.0.1
-
-Hello! Wellcome to initial version
-
----
+This project remains under the MIT License. The original extension was created by Marcos Gomes Neto; this fork keeps the original author attribution while using a separate publisher identity for forked VSIX builds.
