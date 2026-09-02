@@ -1,19 +1,22 @@
 {
   "name": "typing-simulator",
-  "displayName": "Typing Simulator",
-  "description": "Simulates typing for use in presentations or live video recordings or just for fake coding to impress your boss ^^.",
-  "version": "0.1.2",
-  "publisher": "marcos-gomes-neto",
+  "displayName": "Typing Simulator (Fox)",
+  "description": "Simulates typing for presentations and live coding demos in VS Code and Cursor.",
+  "version": "0.1.3",
+  "publisher": "xueshanlinghu",
   "author": {
     "name": "Marcos Gomes Neto",
     "email": "contact@marcosgomesneto.dev"
   },
   "license": "MIT",
   "icon": "resources/icon.png",
-  "homepage": "https://github.com/marcosgomesneto/typing-simulator",
+  "homepage": "https://github.com/xueshanlinghu/typing-simulator",
   "repository": {
     "type": "git",
-    "url": "https://github.com/marcosgomesneto/typing-simulator.git"
+    "url": "https://github.com/xueshanlinghu/typing-simulator.git"
+  },
+  "bugs": {
+    "url": "https://github.com/xueshanlinghu/typing-simulator/issues"
   },
   "keywords": [
     "typing",
@@ -34,7 +37,8 @@
     "keybindings",
     "live",
     "fake",
-    "code"
+    "code",
+    "cursor"
   ],
   "engines": {
     "vscode": "^1.49.0"
@@ -92,16 +96,16 @@
             "Fast"
           ],
           "default": "medium",
-          "description": "Set typing mode."
+          "description": "Set typing speed."
         }
       }
     }
   },
   "scripts": {
-    "vscode:prepublish": "yarn run compile",
+    "vscode:prepublish": "tsc -p ./",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "pretest": "yarn run compile && yarn run lint",
+    "pretest": "tsc -p ./ && eslint src --ext ts",
     "lint": "eslint src --ext ts",
     "test": "vscode-test"
   },
